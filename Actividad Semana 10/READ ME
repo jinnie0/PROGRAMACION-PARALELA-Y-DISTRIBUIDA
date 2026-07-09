@@ -1,0 +1,72 @@
+## Requisitos
+
+- Python 3.8 o superior
+- Hadoop 3.x con Hadoop Streaming (`hadoop-streaming-*.jar`), solo si se
+  ejecuta sobre un clúster real
+- No requiere librerías externas de Python
+
+## Cómo ejecutarlo
+
+### Opción 1: Local, sin clúster (PowerShell / Windows)
+
+```powershell
+cat documento1.txt, documento2.txt | python mapper.py | sort | python reducer.py | Out-File -Encoding utf8 salida_wordcount.txt
+```
+
+### Opción 2: Local, sin clúster (Bash / Linux / macOS)
+
+```bash
+cat documento1.txt documento2.txt | python3 mapper.py | sort | python3 reducer.py > salida_wordcount.txt
+```
+
+### Opción 3: Sobre un clúster Hadoop real
+
+```bash
+hdfs dfs -mkdir -p /user/tu_usuario/wordcount/input
+hdfs dfs -put documento1.txt documento2.txt /user/tu_usuario/wordcount/input
+
+hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-*.jar \
+  -files mapper.py,reducer.py \
+  -mapper mapper.py \
+  -reducer reducer.py \
+  -numReduceTasks 2 \
+  -input /user/tu_usuario/wordcount/input \
+  -output /user/tu_usuario/wordcount/output
+
+hdfs dfs -cat /user/tu_usuario/wordcount/output/part-*
+```
+
+### Análisis de rendimiento (opcional)
+
+Compara el tiempo de la fase reduce variando el número de reducers (1, 2 y 4),
+particionando las claves por hash:
+
+```bash
+python analisis_rendimiento.py
+```
+
+## Descripción de los scripts
+
+**mapper.py** — Lee texto por `stdin`, normaliza a minúsculas, extrae palabras
+con una expresión regular (ignorando números y signos de puntuación) y emite
+un par `palabra\t1` por cada una.
+
+**reducer.py** — Recibe los pares ya ordenados por clave (garantía de la fase
+shuffle & sort) y acumula el conteo mientras la palabra no cambie; al detectar
+una palabra nueva, imprime el total acumulado de la anterior.
+
+**analisis_rendimiento.py** — Simula la fase reduce en paralelo con distinto
+número de reducers usando `multiprocessing`, particionando las claves por
+hash (igual que el `HashPartitioner` por defecto de Hadoop), y mide el tiempo
+de cada configuración.
+
+## Resultados
+
+Sobre el dataset de prueba (dos documentos, 145 pares intermedios), el job
+produjo 88 palabras únicas. El análisis de rendimiento mostró que 2 reducers
+mejoran el tiempo respecto a 1, pero 4 reducers no mejoran más debido al
+overhead de crear procesos adicionales sobre un dataset pequeño.
+
+## Autora
+
+Jinnie — Actividad Semana 10, Parallel and Distributed Computing, UNIBE.
