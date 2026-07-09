@@ -1,0 +1,3 @@
+﻿Hadoop distribuye los datos usando el sistema de archivos HDFS.
+El framework MapReduce fue creado originalmente por Google.
+Muchas empresas usan Hadoop para analizar Big Data de forma eficiente.

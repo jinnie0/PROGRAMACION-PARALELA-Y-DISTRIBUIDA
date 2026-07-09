@@ -1,0 +1,3 @@
+﻿El Big Data se ha convertido en un pilar fundamental para las organizaciones modernas.
+Hadoop permite procesar grandes volumenes de datos de forma distribuida.
+El modelo MapReduce divide el trabajo en dos fases principales: map y reduce.
